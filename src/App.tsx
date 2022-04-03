@@ -1,19 +1,40 @@
 import React, { useState } from 'react';
 import QuestionCard from './components/QuestionCard';
 import { fetchQuizQuestions } from './API';
-import { Difficulty } from './API';
+import { Difficulty, QuestionState } from './API';
 
 const TOTAL_QUESTIONS = 10;
 
+type AnswerObject = {
+  question: string;
+  answer: string;
+  correect: boolean;
+  correctAnswer: string;
+}
+
 function App() {
   const [loading, setLoading] = useState(false);
-  const [question, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<QuestionState[]>([]);
   const [number, setNumber] = useState(0);
-  const [userAnswers, setuserAnswers] = useState([]);
+  const [userAnswers, setuserAnswers] = useState<AnswerObject[]>([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(true);
 
-  const startTrivia = async () => {};
+  const startTrivia = async () => {
+    setLoading(true);
+    setGameOver(false);
+
+    const newQuestions = await fetchQuizQuestions(
+      TOTAL_QUESTIONS,
+      Difficulty.EASY
+    );
+
+    setQuestions(newQuestions);
+    setScore(0);
+    setuserAnswers([]);
+    setNumber(0);
+    setLoading(false);
+  };
 
   const checkAnswer = (e: React.MouseEvent<HTMLButtonElement>) => {};
 
@@ -22,11 +43,15 @@ function App() {
   return (
     <div className="App">
       <h1>REACT QUIZ</h1>
+      {gameOver || userAnswers.length === TOTAL_QUESTIONS ? (
+
       <button className="start" onClick={startTrivia}>
         Start
       </button>
-      <p className="score">Score:</p>
-      <p className="Loading">Loading questions...</p>
+      ) : null }
+      {!gameOver ? <p className="score">Score:</p> : null}
+      {loading && <p className="Loading">Loading questions...</p> }
+      {!loading && !gameOver && (
       <QuestionCard
         questionNr={number + 1}
         totalQuestions={TOTAL_QUESTIONS}
@@ -35,6 +60,7 @@ function App() {
         userAnswer={userAnswers ? userAnswers[number] : undefined}
         callback={checkAnswer}
       />
+      )}
       <button className="next" onClick={nextQuestion}>
         Next question
       </button>
